@@ -13,15 +13,17 @@ import voluptuous as vol
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, ImageProcessingEntity, CONF_SOURCE, CONF_ENTITY_ID,
+    PLATFORM_SCHEMA, ImageProcessingFaceEntity, CONF_SOURCE, CONF_ENTITY_ID,
     CONF_NAME)
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_URL = "https://dev.sighthoundapi.com/v1/detections"
 CLASSIFIER = 'sighthound'
 TIMEOUT = 9
+
+ATTR_PERSONS = 'persons'
+ATTR_TOTAL_PERSONS = 'total_persons'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -73,13 +75,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(entities)
 
 
-class SighthoundEntity(ImageProcessingEntity):
+class SighthoundEntity(ImageProcessingFaceEntity):
     """Create a sighthound entity."""
 
     def __init__(self, api_key, camera_entity, name):
         """Init with the IP and PORT."""
         super().__init__()
-        self._url = BASE_URL
+        self._url = "https://dev.sighthoundapi.com/v1/detections"
         self._headers = {"Content-type": "application/json",
                          "X-Access-Token": api_key}
         self._params = (
@@ -138,10 +140,7 @@ class SighthoundEntity(ImageProcessingEntity):
     @property
     def device_state_attributes(self):
         """Return the classifier attributes."""
-        attr = {
-            'faces': self.faces,
-            'total_faces': self.total_faces,
-            'persons': self.persons,
-            'total_persons': self.total_persons,
+        return {
+            ATTR_PERSONS: self.persons,
+            ATTR_TOTAL_PERSONS: self.total_persons,
             }
-        return attr
