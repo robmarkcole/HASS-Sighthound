@@ -13,8 +13,8 @@ import voluptuous as vol
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_GENDER, CONF_SOURCE,
-    CONF_ENTITY_ID, CONF_NAME)
+    PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_FACES, ATTR_GENDER,
+    CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
 from homeassistant.const import (
     CONF_API_KEY, CONF_MODE)
 
@@ -29,12 +29,15 @@ ATTR_PERSONS = 'persons'
 ATTR_TOTAL_PERSONS = 'total_persons'
 DEV = 'dev'
 PROD = 'prod'
+STATE_DISPLAY = 'state_display'
 
 ACCOUNT_TYPE_SCHEMA = vol.In([DEV, PROD])
+STATE_DISPLAY_SCHEMA = vol.In([ATTR_FACES, ATTR_PERSONS])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_MODE, default=DEV): ACCOUNT_TYPE_SCHEMA,
+    vol.Optional(STATE_DISPLAY, default=ATTR_FACES): STATE_DISPLAY_SCHEMA,
 })
 
 
@@ -101,6 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sighthound = SighthoundEntity(
             config[CONF_API_KEY],
             config[CONF_MODE],
+            config[STATE_DISPLAY],
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME))
         entities.append(sighthound)
@@ -110,10 +114,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SighthoundEntity(ImageProcessingFaceEntity):
     """Create a sighthound entity."""
 
-    def __init__(self, api_key, mode, camera_entity, name):
+    def __init__(self, api_key, mode, state_display, camera_entity, name):
         """Init with the IP and PORT."""
         super().__init__()
         self._mode = mode
+        self._state_display = state_display
         self._url = "https://{}.sighthoundapi.com/v1/detections".format(mode)
         self._headers = {"Content-type": "application/json",
                          "X-Access-Token": api_key}
@@ -146,9 +151,13 @@ class SighthoundEntity(ImageProcessingFaceEntity):
             faces = parse_faces(api_faces)
             total_faces = len(faces)
             self.process_faces(faces, total_faces)
-            self._state = self.total_faces
             self.persons = parse_persons(api_persons)
             self.total_persons = len(self.persons)
+
+            if self._state_display == ATTR_FACES:
+                self._state = self.total_faces
+            elif self._state_display == ATTR_PERSONS:
+                self._state = self.total_persons
 
         else:
             _LOGGER.error("%s error code %s: %s",
@@ -179,5 +188,6 @@ class SighthoundEntity(ImageProcessingFaceEntity):
         return {
             ATTR_PERSONS: self.persons,
             ATTR_TOTAL_PERSONS: self.total_persons,
-            CONF_MODE: self._mode
+            CONF_MODE: self._mode,
+            STATE_DISPLAY: self._state_display
             }

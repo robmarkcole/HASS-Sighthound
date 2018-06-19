@@ -1,5 +1,5 @@
 # HASS-Sighthound
-Home-Assistant custom component for face and person detection with a developer account with [sighthound.com](https://www.sighthound.com/products/cloud). Adds an entity where the state of the entity is the number of `faces` detected in an image. Person and face data are accessible as attributes.
+Home-Assistant custom component for face and person detection with [sighthound.com](https://www.sighthound.com/products/cloud). Adds an entity where the state of the entity is the number of `faces` detected in an image. Person and face data are accessible as attributes.
 
 You must register with sighthound to get an api key. The developer tier (free) allows 5000 requests per month, therefor you are advised to set a long `scan_interval` and call the `scan` service when you want to process an image, otherwise you will quickly burn through your 5000 requests as the default scan interval is 10 seconds. [Please read the developer docs](https://www.sighthound.com/docs/cloud/detection/).
 
@@ -10,13 +10,15 @@ image_processing:
   - platform: sighthound
     api_key: your_api_key
     mode: dev
+    state_display: persons
     scan_interval: 10000
     source:
       - entity_id: camera.local_file
 ```
 Configuration variables:
 - **api_key**: Your developer api key.
-- **api_key**: (Optional, default `dev`) If you have a paid account, used `prod`.
+- **mode**: (Optional, default `dev`) If you have a paid account, used `prod`.
+- **state_display**: (Optional, default `faces`) Select `persons` if you wish the state to be the number of persons in an image.
 - **source**: Must be a camera.
 
 <p align="center">
