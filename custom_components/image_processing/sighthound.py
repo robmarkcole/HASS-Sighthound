@@ -13,8 +13,9 @@ import voluptuous as vol
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, ImageProcessingFaceEntity, CONF_SOURCE, CONF_ENTITY_ID,
-    CONF_NAME)
+    PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_GENDER, CONF_SOURCE,
+    CONF_ENTITY_ID, CONF_NAME)
+from homeassistant.components.image_processing.facebox import ATTR_BOUNDING_BOX
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 CLASSIFIER = 'sighthound'
 TIMEOUT = 9
 
+ATTR_GENDER_CONFIDENCE = 'gender_confidence'
 ATTR_PERSONS = 'persons'
 ATTR_TOTAL_PERSONS = 'total_persons'
 
@@ -46,6 +48,19 @@ def parse_api_response(response):
         if obj['type'] == 'person':
             persons.append(obj)
     return faces, persons
+
+
+def parse_faces(api_faces):
+    """Parse the API face data into the format required."""
+    known_faces = []
+    for entry in api_faces:
+        face = {}
+        face[ATTR_GENDER] = entry['attributes']['gender']
+        face[ATTR_GENDER_CONFIDENCE] = round(
+            100.0*entry['attributes']['genderConfidence'], 2)
+        face[ATTR_BOUNDING_BOX] = entry['boundingBox']
+        known_faces.append(face)
+    return known_faces
 
 
 def post_image(url, headers, params, image):
@@ -109,10 +124,13 @@ class SighthoundEntity(ImageProcessingFaceEntity):
                               self._params,
                               image)
         if response is not None and response.status_code == 200:
-            self.faces, self.persons = parse_api_response(response)
-            self.total_faces = len(self.faces)
-            self.total_persons = len(self.persons)
-            self._state = self.total_persons
+            api_faces, api_persons = parse_api_response(response)
+            faces = parse_faces(api_faces)
+            total_faces = len(faces)
+            self.process_faces(faces, total_faces)
+
+            self.total_persons = len(api_persons)
+            self._state = self.total_faces
 
         else:
             _LOGGER.error("%s error code %s: %s",
