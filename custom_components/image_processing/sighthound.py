@@ -15,20 +15,26 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_GENDER, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME)
-from homeassistant.components.image_processing.facebox import ATTR_BOUNDING_BOX
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY, CONF_MODE)
 
 _LOGGER = logging.getLogger(__name__)
 
 CLASSIFIER = 'sighthound'
 TIMEOUT = 9
 
+ATTR_BOUNDING_BOX = 'bounding_box'
 ATTR_GENDER_CONFIDENCE = 'gender_confidence'
 ATTR_PERSONS = 'persons'
 ATTR_TOTAL_PERSONS = 'total_persons'
+DEV = 'dev'
+PROD = 'prod'
+
+ACCOUNT_TYPE_SCHEMA = vol.In([DEV, PROD])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_MODE, default=DEV): ACCOUNT_TYPE_SCHEMA,
 })
 
 
@@ -94,6 +100,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for camera in config[CONF_SOURCE]:
         sighthound = SighthoundEntity(
             config[CONF_API_KEY],
+            config[CONF_MODE],
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME))
         entities.append(sighthound)
@@ -103,10 +110,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SighthoundEntity(ImageProcessingFaceEntity):
     """Create a sighthound entity."""
 
-    def __init__(self, api_key, camera_entity, name):
+    def __init__(self, api_key, mode, camera_entity, name):
         """Init with the IP and PORT."""
         super().__init__()
-        self._url = "https://dev.sighthoundapi.com/v1/detections"
+        self._mode = mode
+        self._url = "https://{}.sighthoundapi.com/v1/detections".format(mode)
         self._headers = {"Content-type": "application/json",
                          "X-Access-Token": api_key}
         self._params = (
@@ -171,4 +179,5 @@ class SighthoundEntity(ImageProcessingFaceEntity):
         return {
             ATTR_PERSONS: self.persons,
             ATTR_TOTAL_PERSONS: self.total_persons,
+            CONF_MODE: self._mode
             }

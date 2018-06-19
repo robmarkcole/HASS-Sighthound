@@ -9,12 +9,14 @@ Place the `custom_components` folder in your configuration directory (or add its
 image_processing:
   - platform: sighthound
     api_key: your_api_key
+    mode: dev
     scan_interval: 10000
     source:
       - entity_id: camera.local_file
 ```
 Configuration variables:
 - **api_key**: Your developer api key.
+- **api_key**: (Optional, default `dev`) If you have a paid account, used `prod`.
 - **source**: Must be a camera.
 
 #### Optimising resources
