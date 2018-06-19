@@ -16,12 +16,14 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_FACES, ATTR_GENDER,
     CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_MODE)
+    ATTR_ENTITY_ID, CONF_API_KEY, CONF_MODE)
 
 _LOGGER = logging.getLogger(__name__)
 
 CLASSIFIER = 'sighthound'
 TIMEOUT = 9
+
+EVENT_DETECT_PERSONS = 'image_processing.detect_persons'
 
 ATTR_BOUNDING_BOX = 'bounding_box'
 ATTR_GENDER_CONFIDENCE = 'gender_confidence'
@@ -151,8 +153,10 @@ class SighthoundEntity(ImageProcessingFaceEntity):
             faces = parse_faces(api_faces)
             total_faces = len(faces)
             self.process_faces(faces, total_faces)
+
             self.persons = parse_persons(api_persons)
-            self.total_persons = len(self.persons)
+            total_persons = len(self.persons)
+            self.process_persons(total_persons)
 
             if self._state_display == ATTR_FACES:
                 self._state = self.total_faces
@@ -166,6 +170,15 @@ class SighthoundEntity(ImageProcessingFaceEntity):
             self.faces = []
             self.total_persons = None
             self.persons = []
+
+    def process_persons(self, total_persons):
+        """Send event with detected total_persons."""
+        self.total_persons = total_persons
+        self.hass.bus.fire(
+            EVENT_DETECT_PERSONS, {
+                ATTR_TOTAL_PERSONS: self.total_persons,
+                ATTR_ENTITY_ID: self.entity_id
+                })
 
     @property
     def camera_entity(self):
