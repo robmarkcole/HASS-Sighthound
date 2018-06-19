@@ -106,13 +106,15 @@ class SighthoundEntity(ImageProcessingEntity):
                               self._headers,
                               self._params,
                               image)
-        if response is not None:
+        if response is not None and response.status_code == 200:
             self.faces, self.persons = parse_api_response(response)
             self.total_faces = len(self.faces)
             self.total_persons = len(self.persons)
             self._state = self.total_persons
 
         else:
+            _LOGGER.error("%s error code %s: %s",
+                          CLASSIFIER, response.status_code, response.text)
             self.total_faces = None
             self.faces = []
             self.total_persons = None
