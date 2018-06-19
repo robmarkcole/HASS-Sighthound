@@ -1,5 +1,5 @@
 # HASS-Sighthound
-Home-Assistant custom component for face and person detection with [sighthound.com](https://www.sighthound.com/products/cloud). Adds an entity where the state of the entity is the number of `faces` detected in an image. Person and face data are accessible as attributes. On each image processing, an `image_processing.detect_face` event is fired for each detected faces, and an `image_processing.detect_persons` event is fired with the total number of detected persons.
+Home-Assistant custom component for face and person detection with [sighthound.com](https://www.sighthound.com/products/cloud). Adds an entity where the state of the entity is the number of `faces` detected in an image. Person and face data are accessible as attributes.
 
 You must register with sighthound to get an api key. The developer tier (free) allows 5000 requests per month, therefor you are advised to set a long `scan_interval` and call the `scan` service when you want to process an image, otherwise you will quickly burn through your 5000 requests as the default scan interval is 10 seconds. [Please read the developer docs](https://www.sighthound.com/docs/cloud/detection/).
 
@@ -20,6 +20,22 @@ Configuration variables:
 - **mode**: (Optional, default `dev`) If you have a paid account, used `prod`.
 - **state_display**: (Optional, default `faces`) Select `persons` if you wish the state to be the number of persons in an image.
 - **source**: Must be a camera.
+
+## Events
+On each image processing, an `image_processing.detect_face` event is fired for each detected faces, and an `image_processing.detect_persons` event is fired with the total number of detected persons. The events can be used to trigger automations, for example the following:
+
+```yaml
+- id: '11200961111'
+  alias: Notify on person detection
+  trigger:
+    platform: event
+    event_type: image_processing.detect_persons
+  action:
+    service: notify.pushbullet
+    data_template:
+      title: People detected
+      message: 'Alert: {{ trigger.event.data.total_persons }} persons detected by {{ trigger.event.data.entity_id }}'
+```
 
 <p align="center">
 <img src="https://github.com/robmarkcole/HASS-Sighthound/blob/master/images/usage.jpg" width="750">
