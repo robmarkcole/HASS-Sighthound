@@ -63,6 +63,16 @@ def parse_faces(api_faces):
     return known_faces
 
 
+def parse_persons(api_persons):
+    """Parse the API person data into the format required."""
+    known_persons = []
+    for entry in api_persons:
+        person = {}
+        person[ATTR_BOUNDING_BOX] = entry['boundingBox']
+        known_persons.append(person)
+    return known_persons
+
+
 def post_image(url, headers, params, image):
     """Post an image to the classifier."""
     try:
@@ -128,9 +138,9 @@ class SighthoundEntity(ImageProcessingFaceEntity):
             faces = parse_faces(api_faces)
             total_faces = len(faces)
             self.process_faces(faces, total_faces)
-
-            self.total_persons = len(api_persons)
             self._state = self.total_faces
+            self.persons = parse_persons(api_persons)
+            self.total_persons = len(self.persons)
 
         else:
             _LOGGER.error("%s error code %s: %s",
