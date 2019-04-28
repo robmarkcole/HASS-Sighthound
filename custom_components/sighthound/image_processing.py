@@ -1,12 +1,11 @@
 """
 Search images for faces and people using sighthound.com cloud service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.sighthound
 """
 import base64
 import json
 import requests
+from datetime import timedelta
+
 import logging
 import voluptuous as vol
 
@@ -35,6 +34,8 @@ STATE_DISPLAY = 'state_display'
 
 ACCOUNT_TYPE_SCHEMA = vol.In([DEV, PROD])
 STATE_DISPLAY_SCHEMA = vol.In([ATTR_FACES, ATTR_PERSONS])
+
+SCAN_INTERVAL = timedelta(days=365)  # SCAN ONCE THEN NEVER AGAIN.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,

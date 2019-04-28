@@ -1,0 +1,1 @@
+"""The sighthound component."""

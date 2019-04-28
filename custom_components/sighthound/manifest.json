@@ -1,0 +1,8 @@
+{
+        "domain": "sighthound",
+        "name": "Sighthound custom component",
+        "documentation": "https://github.com/robmarkcole/HASS-Sighthound",
+        "requirements": [],
+        "dependencies": [],
+        "codeowners": ["@robmarkcole"]
+}
