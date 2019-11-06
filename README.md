@@ -1,7 +1,7 @@
 # HASS-Sighthound
 Home Assistant custom component for person & face detection with [Sighthound Cloud](https://www.sighthound.com/products/cloud). To use Sighthound Cloud you must register with Sighthound to get an api key. The Sighthound Developer tier (free for non-commercial use) allows 5000 requests per month. If you need more requests per month you will need to sign up for a production account (i.e. Basic or Pro account). 
 
-This component adds an image processing entity where the state of the entity is the number of `people` detected in an image. The number of `faces` are exposed as an attribute of the sensor. Note that whenever a face is detected in an image, a person is always detected. However a person can be detected without a face being detected (e.g. if they have their back to the camera). Note that in order to prevent accidental over-billing, the component will not scan images automatically, but requires you to call the `image_processing.scan` service. This behaviour can be changed by configuring a `scan_interval`, shown below.
+This component adds an image processing entity where the state of the entity is the number of `people` detected in an image. The number of `faces` are exposed as an attribute of the sensor. Note that whenever a face is detected in an image, a person is always detected. However a person can be detected without a face being detected (e.g. if they have their back to the camera). Note that in order to prevent accidentally calling Sighthoun, the component will not scan images automatically, but requires you to call the `image_processing.scan` service e.g. using an automation triggered by motion. Alternativley the entity can be configured to periodically scan the image by configuring a `scan_interval`.
 
 Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). Add to your Home-Assistant config:
 
@@ -9,7 +9,7 @@ Place the `custom_components` folder in your configuration directory (or add its
 image_processing:
   - platform: sighthound
     api_key: your_api_key
-    scan_interval: 30 # optional, in seconds
+    # scan_interval: 30 # optional, in seconds
     source:
       - entity_id: camera.local_file
 ```
