@@ -30,16 +30,16 @@ EVENT_PERSON_DETECTED = "image_processing.person_detected"
 
 ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_PEOPLE = "people"
+CONF_ACCOUNT_TYPE = "account_type"
 DEV = "dev"
 PROD = "prod"
-ALLOWED_MODES = [DEV, PROD]
 
-SCAN_INTERVAL = timedelta(days=365)  # SCAN ONCE THEN NEVER AGAIN.
+SCAN_INTERVAL = timedelta(days=365)  # NEVER SCAN.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_MODE, default=DEV): vol.In(ALLOWED_MODES),
+        vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
     }
 )
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for camera in config[CONF_SOURCE]:
         sighthound = SighthoundEntity(
             config[CONF_API_KEY],
-            config[CONF_MODE],
+            config[CONF_ACCOUNT_TYPE],
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME),
         )
@@ -61,10 +61,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SighthoundEntity(ImageProcessingEntity):
     """Create a sighthound entity."""
 
-    def __init__(self, api_key, mode, camera_entity, name):
+    def __init__(self, api_key, account_type, camera_entity, name):
         """Init."""
         super().__init__()
-        self._api = hound.cloud(api_key, mode)
+        self._api = hound.cloud(api_key, account_type)
         self._camera = camera_entity
         if name:
             self._name = name
