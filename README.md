@@ -9,6 +9,7 @@ Place the `custom_components` folder in your configuration directory (or add its
 image_processing:
   - platform: sighthound
     api_key: your_api_key
+    save_file_folder: /config/www/
     # scan_interval: 30 # optional, in seconds
     source:
       - entity_id: camera.local_file
@@ -17,12 +18,9 @@ image_processing:
 Configuration variables:
 - **api_key**: Your developer api key.
 - **account_type**: (Optional, default `dev` for Developer) If you have a paid account, used `prod`.
+- **save_file_folder**: (Optional) The folder to save processed images to. Note that folder path should be added to [whitelist_external_dirs](https://www.home-assistant.io/docs/configuration/basic/)
 - **source**: Must be a camera.
 
 <p align="center">
 <img src="https://github.com/robmarkcole/HASS-Sighthound/blob/master/images/usage.jpg" width="750">
-</p>
-
-<p align="center">
-<img src="https://github.com/robmarkcole/HASS-Sighthound/blob/master/images/people_identified.jpg" width="750">
 </p>

@@ -1,11 +1,14 @@
 """
-Search images for people and faces using Sighthound cloud service.
+Search images for people using Sighthound cloud service.
 """
 import base64
+import io
+import os
 import json
 import requests
 from datetime import timedelta
 
+from PIL import Image, ImageDraw
 import simplehound.core as hound
 
 import logging
@@ -21,6 +24,7 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
+    draw_box,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY, CONF_MODE
 
@@ -31,6 +35,7 @@ EVENT_PERSON_DETECTED = "image_processing.person_detected"
 ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_PEOPLE = "people"
 CONF_ACCOUNT_TYPE = "account_type"
+CONF_SAVE_FILE_FOLDER = "save_file_folder"
 DEV = "dev"
 PROD = "prod"
 
@@ -40,18 +45,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
+        vol.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
     }
 )
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the platform."""
+    save_file_folder = config.get(CONF_SAVE_FILE_FOLDER)
+    if save_file_folder:
+        save_file_folder = os.path.join(save_file_folder, "")  # If no trailing / add it
+
     entities = []
     for camera in config[CONF_SOURCE]:
         sighthound = SighthoundEntity(
-            config[CONF_API_KEY],
-            config[CONF_ACCOUNT_TYPE],
-            camera[CONF_ENTITY_ID],
+            config.get(CONF_API_KEY),
+            config.get(CONF_ACCOUNT_TYPE),
+            save_file_folder,
+            camera.get(CONF_ENTITY_ID),
             camera.get(CONF_NAME),
         )
         entities.append(sighthound)
@@ -61,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SighthoundEntity(ImageProcessingEntity):
     """Create a sighthound entity."""
 
-    def __init__(self, api_key, account_type, camera_entity, name):
+    def __init__(self, api_key, account_type, save_file_folder, camera_entity, name):
         """Init."""
         super().__init__()
         self._api = hound.cloud(api_key, account_type)
@@ -70,24 +81,40 @@ class SighthoundEntity(ImageProcessingEntity):
             self._name = name
         else:
             camera_name = split_entity_id(camera_entity)[1]
-            self._name = "sighthound {}".format(camera_name)
+            self._name = "sighthound_{}".format(camera_name)
         self._state = None
-        self.metadata = []
         self.faces = []
         self.people = []
+        self._state = None
+        if save_file_folder:
+            self._save_file_folder = save_file_folder
 
     def process_image(self, image):
         """Process an image."""
         try:
             detections = self._api.detect(image)
-            self.metadata = hound.get_metadata(detections)
             self.faces = hound.get_faces(detections)
             self.people = hound.get_people(detections)
+            self._state = len(self.people)
+            if hasattr(self, "_save_file_folder") and self._state > 0:
+                self.save_image(image, self.people, self._save_file_folder)
         except hound.SimplehoundException as exc:
             _LOGGER.error(str(exc))
-            self.metadata = []
             self.faces = []
             self.people = []
+
+    def save_image(self, image, people, directory):
+        """Save a timestamped image with bounding boxes around targets."""
+
+        img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+        draw = ImageDraw.Draw(img)
+
+        for person in people:
+            box = hound.bbox_to_tf_style(person["boundingBox"], img.width, img.height)
+            draw_box(draw, box, img.width, img.height)
+
+        latest_save_path = directory + "{}_latest.jpg".format(self._name)
+        img.save(latest_save_path)
 
     @property
     def camera_entity(self):
@@ -102,7 +129,7 @@ class SighthoundEntity(ImageProcessingEntity):
     @property
     def state(self):
         """Return the state of the entity."""
-        return len(self.people)
+        return self._state
 
     @property
     def unit_of_measurement(self):
