@@ -5,7 +5,7 @@ This component adds an image processing entity where the state of the entity is 
 
 If `save_file_folder` is configured, on each new detection of a person an annotated image with the name `sighthound_latest.jpg` is saved if it doesnt already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications.
 
-For each person detected, an `image_processing.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person. An automation can be used to filter events based on the location of the bounding box. To see this event in your logs, configure the logger level to `debug`.
+For each person detected, an `image_processing.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person. To see this event in your logs, configure the logger level to `debug`.
 
 Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). Add to your Home-Assistant config:
 
@@ -61,3 +61,29 @@ Then in `automations.yaml` we will send a photo when `sighthound_latest.jpg` is 
       data:
         file: /config/www/sighthound_local_file_latest.jpg
   ```
+
+## Count people using the `image_processing.person_detected` event
+Using a [counter](https://www.home-assistant.io/integrations/counter) an automation can be used to count the number of people seen. In `configuration.yaml`:
+
+```yaml
+counter:
+  people_counter:
+    name: People
+    icon: mdi:alert
+```
+
+In `automations.yaml`:
+```yaml
+- id: 'peoplecounterautomation'
+  alias: People Counting Automation
+  trigger:
+    platform: event
+    event_type: image_processing.person_detected
+    event_data:
+      entity_id: image_processing.sighthound_local_file
+  action:
+    service: counter.increment
+    entity_id: counter.people_counter
+```
+
+The counter is incremented each time a person is detected. The bounding box can in principle be used to include/exclude people based on their location in the image.
