@@ -3,6 +3,8 @@ Home Assistant custom component for person & face detection with [Sighthound Clo
 
 This component adds an image processing entity where the state of the entity is the number of `people` detected in an image. The number of `faces` are exposed as an attribute of the sensor. Note that whenever a face is detected in an image, a person is always detected. However a person can be detected without a face being detected (e.g. if they have their back to the camera). Note that in order to prevent accidentally using up your requets to Sighthound, by default the component will **not** automatically scan images, but requires you to call the `image_processing.scan` service e.g. using an automation triggered by motion. Alternativley, periodic scanning can be enabled by configuring a `scan_interval` (shown in example config below).
 
+If `save_file_folder` is configured, on each new detection of a person an annotated image with the name `sighthound_latest.jpg` is saved if it doesnt already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications.
+
 Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). Add to your Home-Assistant config:
 
 ```yaml
@@ -24,3 +26,36 @@ Configuration variables:
 <p align="center">
 <img src="https://github.com/robmarkcole/HASS-Sighthound/blob/master/images/usage.jpg" width="750">
 </p>
+
+## Displaying the `sighthound_latest.jpg` image
+It easy to display the `sighthound_latest.jpg` image with a [local_file](https://www.home-assistant.io/integrations/local_file) camera. An example configuration is:
+
+```yaml
+camera:
+  - platform: local_file
+    file_path: /config/www/sighthound_latest.jpg
+    name: sighthound_latest
+```
+
+## Automation to send the `sighthound_latest.jpg` file in a notification
+Configure the [folder_watcher](https://www.home-assistant.io/integrations/folder_watcher/) to watch the directory containing your configured  `save_file_folder`. In `configuration.yaml`, e.g.:
+
+```yaml
+folder_watcher:
+  - folder: /config/www/
+```
+Then in `automations.yaml` we will send a photo when `sighthound_latest.jpg` is modified. Note that I [have included](https://community.home-assistant.io/t/limit-automation-triggering/14915) a couple of delays which disable the automation as the `folder_watcher` events can fire multiple times duing the image saving process:
+
+```yaml
+- id: '1527837198169'
+  alias: New Sighthound detection
+  trigger:
+    platform: event
+    event_type: folder_watcher
+    event_data:
+      file : sighthound_local_file_latest.jpg
+  action:
+    - service: telegram_bot.send_photo
+      data:
+        file: /config/www/sighthound_local_file_latest.jpg
+  ```
