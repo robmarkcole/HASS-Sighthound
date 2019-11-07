@@ -39,6 +39,8 @@ CONF_SAVE_FILE_FOLDER = "save_file_folder"
 DEV = "dev"
 PROD = "prod"
 
+RED = (255, 0, 0)
+
 SCAN_INTERVAL = timedelta(days=365)  # NEVER SCAN.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -86,6 +88,8 @@ class SighthoundEntity(ImageProcessingEntity):
         self.faces = []
         self.people = []
         self._state = None
+        self._image_width = None
+        self._image_height = None
         if save_file_folder:
             self._save_file_folder = save_file_folder
 
@@ -95,26 +99,65 @@ class SighthoundEntity(ImageProcessingEntity):
             detections = self._api.detect(image)
             self.faces = hound.get_faces(detections)
             self.people = hound.get_people(detections)
+            metadata = hound.get_metadata(detections)
+            self._image_width = metadata["image_width"]
+            self._image_height = metadata["image_height"]
+
             self._state = len(self.people)
             if hasattr(self, "_save_file_folder") and self._state > 0:
-                self.save_image(image, self.people, self._save_file_folder)
+                self.save_image(image, self.people, self.faces, self._save_file_folder)
+            for person in self.people:
+                self.fire_person_detected_event(person)
+
         except hound.SimplehoundException as exc:
             _LOGGER.error(str(exc))
             self.faces = []
             self.people = []
+            self._image_width = None
+            self._image_height = None
 
-    def save_image(self, image, people, directory):
+    def save_image(self, image, people, faces, directory):
         """Save a timestamped image with bounding boxes around targets."""
 
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         draw = ImageDraw.Draw(img)
 
         for person in people:
-            box = hound.bbox_to_tf_style(person["boundingBox"], img.width, img.height)
-            draw_box(draw, box, img.width, img.height)
+            box = hound.bbox_to_tf_style(
+                person["boundingBox"], self._image_width, self._image_height
+            )
+            draw_box(draw, box, self._image_width, self._image_height, color=RED)
+
+        for face in faces:
+            age = str(face["age"])
+            gender = face["gender"]
+            face_description = f"{gender}_{age}"
+            bbox = hound.bbox_to_tf_style(
+                face["boundingBox"], self._image_width, self._image_height
+            )
+            draw_box(
+                draw,
+                bbox,
+                self._image_width,
+                self._image_height,
+                text=face_description,
+                color=RED,
+            )
 
         latest_save_path = directory + "{}_latest.jpg".format(self._name)
         img.save(latest_save_path)
+
+    def fire_person_detected_event(self, person):
+        """Send event with detected total_persons."""
+        self.hass.bus.fire(
+            EVENT_PERSON_DETECTED,
+            {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_BOUNDING_BOX: hound.bbox_to_tf_style(
+                    person["boundingBox"], self._image_width, self._image_height
+                ),
+            },
+        )
 
     @property
     def camera_entity(self):
