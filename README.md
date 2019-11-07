@@ -26,7 +26,7 @@ Configuration variables:
 - **source**: Must be a camera.
 
 <p align="center">
-<img src="https://github.com/robmarkcole/HASS-Sighthound/blob/master/images/usage.png" width="750">
+<img src="https://github.com/robmarkcole/HASS-Sighthound/blob/master/images/usage.png" width="500">
 </p>
 
 ## Displaying the `sighthound_latest.jpg` image
