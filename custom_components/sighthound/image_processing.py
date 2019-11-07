@@ -1,5 +1,5 @@
 """
-Search images for people using Sighthound cloud service.
+Person detection using Sighthound cloud service.
 """
 import base64
 import io
@@ -19,6 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
+    ATTR_AGE,
     ATTR_FACES,
     ATTR_GENDER,
     CONF_SOURCE,
@@ -30,6 +31,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY, CONF_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
+EVENT_FACE_DETECTED = "image_processing.face_detected"
 EVENT_PERSON_DETECTED = "image_processing.person_detected"
 
 ATTR_BOUNDING_BOX = "bounding_box"
@@ -106,6 +108,8 @@ class SighthoundEntity(ImageProcessingEntity):
             self._state = len(self.people)
             if hasattr(self, "_save_file_folder") and self._state > 0:
                 self.save_image(image, self.people, self.faces, self._save_file_folder)
+            for face in self.faces:
+                self.fire_face_detected_event(face)
             for person in self.people:
                 self.fire_person_detected_event(person)
 
@@ -156,6 +160,20 @@ class SighthoundEntity(ImageProcessingEntity):
                 ATTR_BOUNDING_BOX: hound.bbox_to_tf_style(
                     person["boundingBox"], self._image_width, self._image_height
                 ),
+            },
+        )
+
+    def fire_face_detected_event(self, face):
+        """Send event with detected total_persons."""
+        self.hass.bus.fire(
+            EVENT_FACE_DETECTED,
+            {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_BOUNDING_BOX: hound.bbox_to_tf_style(
+                    face["boundingBox"], self._image_width, self._image_height
+                ),
+                ATTR_AGE: face["age"],
+                ATTR_GENDER: face["gender"],
             },
         )
 

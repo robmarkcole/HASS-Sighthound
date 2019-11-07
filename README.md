@@ -5,7 +5,7 @@ This component adds an image processing entity where the state of the entity is 
 
 If `save_file_folder` is configured, on each new detection of a person an annotated image with the name `sighthound_latest.jpg` is saved if it doesnt already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications.
 
-For each person detected, an `image_processing.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person. To see this event in your logs, configure the logger level to `debug`.
+For each person detected, an `image_processing.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person. Similarly, for each face detected an `image_processing.face_detected` event is fired, which in addition to the bounding box and entity_id contains the `age` and `gender` of the face. To see these events in your logs, configure the logger level to `debug`.
 
 Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). Add to your Home-Assistant config:
 
@@ -46,7 +46,8 @@ Configure the [folder_watcher](https://www.home-assistant.io/integrations/folder
 folder_watcher:
   - folder: /config/www/
 ```
-Then in `automations.yaml` we will send a photo when `sighthound_latest.jpg` is modified. Note that I [have included](https://community.home-assistant.io/t/limit-automation-triggering/14915) a couple of delays which disable the automation as the `folder_watcher` events can fire multiple times duing the image saving process:
+
+Then in `automations.yaml` we will send a photo when `sighthound_latest.jpg` is updated:
 
 ```yaml
 - id: '1527837198169'
@@ -86,4 +87,4 @@ In `automations.yaml`:
     entity_id: counter.people_counter
 ```
 
-The counter is incremented each time a person is detected. The bounding box can in principle be used to include/exclude people based on their location in the image.
+The counter is incremented each time a person is detected. The bounding box can in principle be used to include/exclude people based on their location in the image. TODO: add example of using bounding box.
