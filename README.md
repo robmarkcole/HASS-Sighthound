@@ -47,20 +47,30 @@ folder_watcher:
   - folder: /config/www/
 ```
 
-Then in `automations.yaml` we can use a notification platform such as [Telegram](https://www.home-assistant.io/integrations/telegram/) to send a notification including the image when `sighthound_latest.jpg` is updated:
+Then we can use a notification platform such as [Telegram](https://www.home-assistant.io/integrations/telegram/) to send a notification including the image when `sighthound_latest.jpg` is updated. Note that I [have included](https://community.home-assistant.io/t/limit-automation-triggering/14915) a couple of delays which temporarily disable the automation as the `folder_watcher` events can fire multiple times duing the image saving process. Add to `automations.yaml`:
 
 ```yaml
 - id: '1527837198169'
-  alias: New Sighthound detection
+  alias: New detection
   trigger:
     platform: event
     event_type: folder_watcher
     event_data:
       file : sighthound_local_file_latest.jpg
-  action:
+    action:
+    - service: automation.turn_off
+      entity_id: automation.new_detection
+      ## Make sure file is saved
+    - delay:
+        seconds: 1
     - service: telegram_bot.send_photo
       data:
         file: /config/www/sighthound_local_file_latest.jpg
+      ## Throttle notifications
+    - delay:
+        seconds: 2
+    - service: automation.turn_on
+      entity_id: automation.new_detection
   ```
 
 ## Count people using the `image_processing.person_detected` event
