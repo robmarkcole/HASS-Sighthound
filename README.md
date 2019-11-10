@@ -1,11 +1,13 @@
 # HASS-Sighthound
 [Home Assistant](https://www.home-assistant.io/) custom component for people detection with [Sighthound Cloud](https://www.sighthound.com/products/cloud). To use Sighthound Cloud you must register with Sighthound to get an api key. The Sighthound Developer tier (free for non-commercial use) allows 5000 requests per month. If you need more requests per month you will need to sign up for a production account (i.e. Basic or Pro account).
 
-This component adds an image processing entity where the state of the entity is the number of `people` detected in an image. The number of `faces` are exposed as an attribute of the sensor. Note that whenever a face is detected in an image, a person is **always** detected. However a person can be detected without a face being detected (e.g. if they have their back to the camera). Note that in order to prevent accidentally using up your requets to Sighthound, by default the component will **not** automatically scan images, but requires you to call the `image_processing.scan` service e.g. using an automation triggered by motion. Alternativley, periodic scanning can be enabled by configuring a `scan_interval`.
+This component adds an image processing entity where the state of the entity is the number of `people` detected in an image. The number of `faces` are exposed as an attribute of the sensor. Note that whenever a face is detected in an image, a person is **always** detected. However a person can be detected without a face being detected (e.g. if they have their back to the camera). The time of the last detected person is in the `last_person` attribute.
 
-If `save_file_folder` is configured, on each new detection of a person an annotated image with the name `sighthound_latest.jpg` is saved in the configured folder if it doesnt already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications.
+If `save_file_folder` is configured, on each new detection of a person an annotated image with the name `sighthound_latest.jpg` is saved in the configured folder if it doesnt already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications. Additionally if `save_timestamped_file` is configred as `True` then an image file is created of the processed image, where the file name includes the time of detection. It is the users responsibility to manage these files, e.g. using an automation to clean up files older than some time.
 
 For each person detected, an `image_processing.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person. Similarly, for each face detected an `image_processing.face_detected` event is fired, which in addition to the bounding box and entity_id contains the `age` and `gender` of the face. To see these events in your logs, configure the logger level to `debug`.
+
+**Note** that in order to prevent accidentally using up your requets to Sighthound, by default the component will **not** automatically scan images, but requires you to call the `image_processing.scan` service e.g. using an automation triggered by motion. Alternativley, periodic scanning can be enabled by configuring a `scan_interval`.
 
 Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). Add to your Home-Assistant config:
 
@@ -14,6 +16,7 @@ image_processing:
   - platform: sighthound
     api_key: your_api_key
     save_file_folder: /config/www/
+    save_timestamped_file: True
     # scan_interval: 30 # optional, in seconds
     source:
       - entity_id: camera.local_file
@@ -23,6 +26,7 @@ Configuration variables:
 - **api_key**: Your developer api key.
 - **account_type**: (Optional, default `dev` for Developer) If you have a paid account, used `prod`.
 - **save_file_folder**: (Optional) The folder to save processed images to. Note that folder path should be added to [whitelist_external_dirs](https://www.home-assistant.io/docs/configuration/basic/)
+- **save_timestamped_file**: (Optional, default `False`, requires `save_file_folder` to be configured) Save the processed image with the time of detection in the filename.
 - **source**: Must be a camera.
 
 <p align="center">
@@ -39,38 +43,21 @@ camera:
     name: sighthound
 ```
 
-## Automation to send the `sighthound_latest.jpg` file in a notification
-Configure the [folder_watcher](https://www.home-assistant.io/integrations/folder_watcher/) to watch the directory containing your configured  `save_file_folder`. In `configuration.yaml`, e.g.:
+## Automation to send the processed image in a notification
+We can use a notification platform such as [Telegram](https://www.home-assistant.io/integrations/telegram/) to send a message including the processed image.
 
 ```yaml
-folder_watcher:
-  - folder: /config/www/
-```
-
-Then we can use a notification platform such as [Telegram](https://www.home-assistant.io/integrations/telegram/) to send a notification including the image when `sighthound_latest.jpg` is updated. Note that I [have included](https://community.home-assistant.io/t/limit-automation-triggering/14915) a couple of delays which temporarily disable the automation as the `folder_watcher` events can fire multiple times duing the image saving process. Add to `automations.yaml`:
-
-```yaml
-- id: '1527837198169'
-  alias: New detection
+- action:
+  - data_template:
+      caption: "Person detected by Sighthound"
+      file: "{{trigger.event.data.file_path}}"
+    service: telegram_bot.send_photo
+  alias: New person alert
+  condition: []
+  id: 'persondetectedautomation'
   trigger:
-    platform: event
-    event_type: folder_watcher
-    event_data:
-      file : sighthound_local_file_latest.jpg
-    action:
-    - service: automation.turn_off
-      entity_id: automation.new_detection
-      ## Make sure file is saved
-    - delay:
-        seconds: 1
-    - service: telegram_bot.send_photo
-      data:
-        file: /config/www/sighthound_local_file_latest.jpg
-      ## Throttle notifications
-    - delay:
-        seconds: 2
-    - service: automation.turn_on
-      entity_id: automation.new_detection
+  - platform: event
+    event_type: image_processing.file_saved
   ```
 
 ## Count people using the `image_processing.person_detected` event
