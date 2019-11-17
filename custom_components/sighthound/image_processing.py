@@ -44,7 +44,7 @@ CONF_SAVE_TIMESTAMPTED_FILE = "save_timestamped_file"
 DEV = "dev"
 PROD = "prod"
 
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 
 RED = (255, 0, 0)
 
