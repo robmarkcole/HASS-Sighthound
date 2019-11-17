@@ -44,7 +44,7 @@ CONF_SAVE_TIMESTAMPTED_FILE = "save_timestamped_file"
 DEV = "dev"
 PROD = "prod"
 
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 
 RED = (255, 0, 0)
 
@@ -175,7 +175,11 @@ class SighthoundEntity(ImageProcessingEntity):
                 self._name, self._last_detection
             )
 
-            img.save(timestamp_save_path)
+            out_file = open(timestamp_save_path, "wb")
+            img.save(out_file, format="JPEG")
+            out_file.flush()
+            os.fsync(out_file)
+            out_file.close()
             self.fire_saved_file_event(timestamp_save_path)
             _LOGGER.info("Saved %s", timestamp_save_path)
 
