@@ -1,3 +1,5 @@
+[![Sponsor](https://img.shields.io/badge/sponsor-%F0%9F%92%96-green)](https://github.com/sponsors/robmarkcole)
+
 # HASS-Sighthound
 [Home Assistant](https://www.home-assistant.io/) custom component for people detection with [Sighthound Cloud](https://www.sighthound.com/products/cloud). To use Sighthound Cloud you must register with Sighthound to get an api key. The Sighthound Developer tier (free for non-commercial use) allows 5000 requests per month. If you need more requests per month you will need to sign up for a production account (i.e. Basic or Pro account).
 
@@ -88,3 +90,9 @@ The counter is incremented each time a person is detected. The bounding box can 
 
 ## Info on the bounding box
 The bounding boxes are formatted to be consumed by the `image_processing.draw_box()` function. The formatting convention is [identical](https://www.tensorflow.org/api_docs/python/tf/image/draw_bounding_boxes) to that used by Tensorflow, where the bounding box is defined by the tuple `(y_min, x_min, y_max, x_max)` where the coordinates are floats in the range `[0.0, 1.0]` and relative to the width and height of the image.
+
+## ✨ Support this work
+
+https://github.com/sponsors/robmarkcole
+
+If you or your business find this work useful please consider becoming a sponsor at the link above, this really helps justify the time I invest in maintaining this repo. As we say in England, 'every little helps' - thanks in advance! 
