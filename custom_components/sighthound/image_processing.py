@@ -14,6 +14,7 @@ import simplehound.core as hound
 import logging
 import voluptuous as vol
 
+from homeassistant.util.pil import draw_box
 import homeassistant.util.dt as dt_util
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +27,6 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
-    draw_box,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY, CONF_FILE_PATH, CONF_MODE
 
