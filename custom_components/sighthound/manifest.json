@@ -1,9 +1,9 @@
 {
         "domain": "sighthound",
-        "name": "Sighthound custom component",
-        "documentation": "https://github.com/robmarkcole/HASS-Sighthound",
+        "name": "Sighthound",
+        "documentation": "https://www.home-assistant.io/integrations/sighthound",
         "requirements": [
-                "simplehound==0.2"
+                "simplehound==0.3"
         ],
         "dependencies": [],
         "codeowners": [
