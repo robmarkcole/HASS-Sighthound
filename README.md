@@ -11,6 +11,8 @@ For each person detected, an `image_processing.person_detected` event is fired. 
 
 **Note** that in order to prevent accidentally using up your requets to Sighthound, by default the component will **not** automatically scan images, but requires you to call the `image_processing.scan` service e.g. using an automation triggered by motion. Alternativley, periodic scanning can be enabled by configuring a `scan_interval`.
 
+## Installation
+
 Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). Add to your Home-Assistant config:
 
 ```yaml
