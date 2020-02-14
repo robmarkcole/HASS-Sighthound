@@ -1,5 +1,7 @@
 [![Sponsor](https://img.shields.io/badge/sponsor-%F0%9F%92%96-green)](https://github.com/sponsors/robmarkcole)
 
+**Note** that there is [an official integration for Sighthound](https://www.home-assistant.io/integrations/sighthound/), but this version adds experimental features to allow saving of processed images.
+
 # HASS-Sighthound
 [Home Assistant](https://www.home-assistant.io/) custom component for people detection with [Sighthound Cloud](https://www.sighthound.com/products/cloud). To use Sighthound Cloud you must register with Sighthound to get an api key. The Sighthound Developer tier (free for non-commercial use) allows 5000 requests per month. If you need more requests per month you will need to sign up for a production account (i.e. Basic or Pro account).
 

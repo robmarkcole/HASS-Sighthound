@@ -1,34 +1,29 @@
 """
 Person detection using Sighthound cloud service.
 """
-import base64
 import io
+import logging
 import os
-import json
-import requests
-from datetime import timedelta
 
 from PIL import Image, ImageDraw
-import simplehound.core as hound
 
-import logging
-import voluptuous as vol
-
-from homeassistant.util.pil import draw_box
-import homeassistant.util.dt as dt_util
-from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
+import simplehound.core as hound
+import voluptuous as vol
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
-    ImageProcessingEntity,
     ATTR_AGE,
     ATTR_FACES,
     ATTR_GENDER,
-    CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_SOURCE,
+    PLATFORM_SCHEMA,
+    ImageProcessingEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY, CONF_FILE_PATH, CONF_MODE
+from homeassistant.core import split_entity_id
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,8 +42,6 @@ PROD = "prod"
 DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 
 RED = (255, 0, 0)
-
-SCAN_INTERVAL = timedelta(days=365)  # NEVER SCAN.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -230,6 +223,11 @@ class SighthoundEntity(ImageProcessingEntity):
     def state(self):
         """Return the state of the entity."""
         return self._state
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
 
     @property
     def unit_of_measurement(self):
