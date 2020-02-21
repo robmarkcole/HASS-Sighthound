@@ -7,9 +7,9 @@
 
 This component adds an image processing entity where the state of the entity is the number of `people` detected in an image. The number of `faces` are exposed as an attribute of the sensor. Note that whenever a face is detected in an image, a person is **always** detected. However a person can be detected without a face being detected (e.g. if they have their back to the camera). The time of the last detected person is in the `last_person` attribute.
 
-If `save_file_folder` is configured, on each new detection of a person an annotated image with the name `sighthound_latest.jpg` is saved in the configured folder if it doesnt already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications. Additionally if `save_timestamped_file` is configred as `True` then an image file is created of the processed image, where the file name includes the time of detection. It is the users responsibility to manage these files, e.g. using an automation to clean up files older than some time.
+If `save_file_folder` is configured, on each new detection of a person an annotated image with the name `sighthound_latest.jpg` is saved in the configured folder if it doesnt already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications. Additionally, if `save_timestamped_file` is configred as `True` then an image file is created of the processed image, where the file name includes the time of detection. When either of these images are saved an `sighthound.file_saved` event is fired, allowing the image to be used in a notification. It is the users responsibility to manage these files, e.g. using an automation to clean up files older than some time.
 
-For each person detected, an `image_processing.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person. Similarly, for each face detected an `image_processing.face_detected` event is fired, which in addition to the bounding box and entity_id contains the `age` and `gender` of the face. To see these events in your logs, configure the logger level to `debug`.
+For each person detected, an `sighthound.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person. Similarly, for each face detected an `sighthound.face_detected` event is fired, which in addition to the bounding box and entity_id contains the `age` and `gender` of the face. To see these events in your logs, configure the logger level to `debug`.
 
 **Note** that in order to prevent accidentally using up your requets to Sighthound, by default the component will **not** automatically scan images, but requires you to call the `image_processing.scan` service e.g. using an automation triggered by motion. Alternativley, periodic scanning can be enabled by configuring a `scan_interval`.
 
@@ -63,10 +63,10 @@ We can use a notification platform such as [Telegram](https://www.home-assistant
   id: 'persondetectedautomation'
   trigger:
   - platform: event
-    event_type: image_processing.file_saved
+    event_type: sighthound.file_saved
   ```
 
-## Count people using the `image_processing.person_detected` event
+## Count people using the `sighthound.person_detected` event
 Using a [counter](https://www.home-assistant.io/integrations/counter) an automation can be used to count the number of people seen. In `configuration.yaml`:
 
 ```yaml
@@ -82,7 +82,7 @@ In `automations.yaml`:
   alias: People Counting Automation
   trigger:
     platform: event
-    event_type: image_processing.person_detected
+    event_type: sighthound.person_detected
     event_data:
       entity_id: image_processing.sighthound_local_file
   action:

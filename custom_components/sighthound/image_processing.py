@@ -27,9 +27,9 @@ from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_FACE_DETECTED = "image_processing.face_detected"
-EVENT_PERSON_DETECTED = "image_processing.person_detected"
-EVENT_FILE_SAVED = "image_processing.file_saved"
+EVENT_FACE_DETECTED = "sighthound.face_detected"
+EVENT_PERSON_DETECTED = "sighthound.person_detected"
+EVENT_FILE_SAVED = "sighthound.file_saved"
 
 ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_PEOPLE = "people"
@@ -161,7 +161,12 @@ class SighthoundEntity(ImageProcessingEntity):
             )
 
         latest_save_path = directory + "{}_latest.jpg".format(self._name)
-        img.save(latest_save_path)
+        out_file = open(latest_save_path, "wb")
+        img.save(out_file, format="JPEG")
+        out_file.flush()
+        os.fsync(out_file)
+        out_file.close()
+        self.fire_saved_file_event(latest_save_path)
 
         if self._save_timestamped_file:
             timestamp_save_path = directory + "{} {}.jpg".format(
