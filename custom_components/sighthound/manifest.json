@@ -2,9 +2,7 @@
         "domain": "sighthound",
         "name": "Sighthound custom component",
         "documentation": "https://github.com/robmarkcole/HASS-Sighthound",
-        "requirements": [
-                "simplehound==0.2"
-        ],
+        "requirements": ["pillow==7.2.0", "simplehound==0.6"],
         "dependencies": [],
         "codeowners": [
                 "@robmarkcole"
