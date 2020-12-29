@@ -28,6 +28,12 @@ EVENT_VEHICLE_DETECTED = "sighthound.vehicle_detected"
 ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_PEOPLE = "people"
 ATTR_VEHICLE = "vehicle"
+ATTR_PLATE = "plate"
+ATTR_MAKE = "make"
+ATTR_MODEL = "model"
+ATTR_COLOR = "color"
+ATTR_REGION = "region"
+ATTR_VEHICLE_TYPE = "vehicle_type"
 CONF_ACCOUNT_TYPE = "account_type"
 CONF_SAVE_FILE_FOLDER = "save_file_folder"
 CONF_SAVE_TIMESTAMPTED_FILE = "save_timestamped_file"
@@ -228,7 +234,16 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
     def fire_vehicle_detected_event(self, vehicle):
         """Send event."""
         self.hass.bus.fire(
-            EVENT_VEHICLE_DETECTED, {ATTR_ENTITY_ID: self.entity_id,},
+            EVENT_VEHICLE_DETECTED,
+            {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_PLATE: vehicle["licenseplate"],
+                ATTR_VEHICLE_TYPE: vehicle["vehicleType"],
+                ATTR_MAKE: vehicle["make"],
+                ATTR_MODEL: vehicle["model"],
+                ATTR_COLOR: vehicle["color"],
+                ATTR_REGION: vehicle["region"],
+            },
         )
 
     def save_image(self, image, vehicles, directory):
