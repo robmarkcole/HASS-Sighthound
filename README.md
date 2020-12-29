@@ -1,13 +1,27 @@
 This repo contains beta features there are destined for the [official integration for Sighthound](https://www.home-assistant.io/integrations/sighthound/).
 
 # HASS-Sighthound
-[Home Assistant](https://www.home-assistant.io/) custom integration for people detection with [Sighthound Cloud](https://www.sighthound.com/products/cloud). To use Sighthound Cloud you must register with Sighthound to get an api key. The Sighthound Developer tier (free for non-commercial use) allows 5000 requests per month. If you need more requests per month you will need to sign up for a production account (i.e. Basic or Pro account).
+[Home Assistant](https://www.home-assistant.io/) custom integration for people & vehicle detection (with numberplate) using [Sighthound Cloud](https://www.sighthound.com/products/cloud). To use Sighthound Cloud you must register with Sighthound to get an api key. The Sighthound Developer tier (free for non-commercial use) allows 5000 requests per month. If you need more requests per month you will need to sign up for a production account (i.e. Basic or Pro account).
 
-This component adds an image processing entity where the state of the entity is the number of `people` detected in an image. The number of `faces` are exposed as an attribute of the sensor. Note that whenever a face is detected in an image, a person is **always** detected. However a person can be detected without a face being detected (e.g. if they have their back to the camera). The time of the last detected person is in the `last_person` attribute.
+This component adds a pair of image processing entities - one for person detection and one for vehicle detection. The state of the entity is the number of people/vehicles detected in an image.
 
-If `save_file_folder` is configured, on each new detection of a person an annotated image with the name `sighthound_latest.jpg` is saved in the configured folder if it doesn't already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications. Additionally, if `save_timestamped_file` is configured as `True` then an image file is created of the processed image, where the file name includes the time of detection.
+If `save_file_folder` is configured, on each new detection an annotated image with the name `sighthound_latest.jpg` is saved in the configured folder if it doesn't already exist, and over-written if it does exist. The `sighthound_latest.jpg` image shows the bounding box around detected people/vehicles and can be displayed on the Home Assistant front end using a local_file camera, and used in notifications. Additionally, if `save_timestamped_file` is configured as `True` then an image file is created of the processed image, where the file name includes the time of detection.
 
-For each person detected, an `sighthound.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person.
+For each person detected, an `sighthound.person_detected` event is fired. The event data includes the `entity_id` of the image processing entity firing the event, and the bounding box around the detected person. For each vehicle detected, an `sighthound.vehicle_detected` event is fired, with example data below:
+
+```
+{
+"event_type": "sighthound.vehicle_detected",
+"data": {
+    "entity_id": "image_processing.sighthound_vehicle_local_file_1",
+    "plate": "CV67CBU",
+    "vehicle_type": "car",
+    "make": "Ford",
+    "model": "Ranger",
+    "color": "black",
+    "region": "UK"
+}
+```
 
 **Note** that in order to prevent accidentally using up your requests to Sighthound, by default the component will **not** automatically scan images, but requires you to call the `image_processing.scan` service e.g. using an automation triggered by motion.
 
