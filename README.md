@@ -1,9 +1,7 @@
-[![Sponsor](https://img.shields.io/badge/sponsor-%F0%9F%92%96-green)](https://github.com/sponsors/robmarkcole)
-
-**Note** that there is [an official integration for Sighthound](https://www.home-assistant.io/integrations/sighthound/). The only difference to the official integration being that this custom integration provides the `sighthound.file_saved` events (which can be reproduced using the [folder_watcher](https://www.home-assistant.io/integrations/folder_watcher/) integration), and supports face detection.
+This repo contains beta features there are destined for the [official integration for Sighthound](https://www.home-assistant.io/integrations/sighthound/).
 
 # HASS-Sighthound
-[Home Assistant](https://www.home-assistant.io/) custom component for people detection with [Sighthound Cloud](https://www.sighthound.com/products/cloud). To use Sighthound Cloud you must register with Sighthound to get an api key. The Sighthound Developer tier (free for non-commercial use) allows 5000 requests per month. If you need more requests per month you will need to sign up for a production account (i.e. Basic or Pro account).
+[Home Assistant](https://www.home-assistant.io/) custom integration for people detection with [Sighthound Cloud](https://www.sighthound.com/products/cloud). To use Sighthound Cloud you must register with Sighthound to get an api key. The Sighthound Developer tier (free for non-commercial use) allows 5000 requests per month. If you need more requests per month you will need to sign up for a production account (i.e. Basic or Pro account).
 
 This component adds an image processing entity where the state of the entity is the number of `people` detected in an image. The number of `faces` are exposed as an attribute of the sensor. Note that whenever a face is detected in an image, a person is **always** detected. However a person can be detected without a face being detected (e.g. if they have their back to the camera). The time of the last detected person is in the `last_person` attribute.
 
@@ -23,7 +21,6 @@ image_processing:
     api_key: your_api_key
     save_file_folder: /config/www/
     save_timestamped_file: True
-    # scan_interval: 30 # optional, in seconds
     source:
       - entity_id: camera.local_file
 ```
