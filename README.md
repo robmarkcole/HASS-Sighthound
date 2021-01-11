@@ -33,6 +33,7 @@ image_processing:
     api_key: your_api_key
     save_file_folder: /config/www/
     save_timestamped_file: True
+    always_save_latest_jpg: True
     source:
       - entity_id: camera.local_file
 ```
@@ -42,6 +43,7 @@ Configuration variables:
 - **account_type**: (Optional, default `dev` for Developer) If you have a paid account, used `prod`.
 - **save_file_folder**: (Optional) The folder to save processed images to. Note that folder path should be added to [whitelist_external_dirs](https://www.home-assistant.io/docs/configuration/basic/)
 - **save_timestamped_file**: (Optional, default `False`, requires `save_file_folder` to be configured) Save the processed image with the time of detection in the filename.
+- **always_save_latest_jpg**: (Optional, default `False`, requires `save_file_folder` to be configured) Always save the last processed image, no matter there were detections or not.
 - **source**: Must be a camera.
 
 <p align="center">
