@@ -37,6 +37,7 @@ ATTR_VEHICLE_TYPE = "vehicle_type"
 CONF_ACCOUNT_TYPE = "account_type"
 CONF_SAVE_FILE_FOLDER = "save_file_folder"
 CONF_SAVE_TIMESTAMPTED_FILE = "save_timestamped_file"
+CONF_ALWAYS_SAVE_LATEST_JPG = "always_save_latest_jpg"
 DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 DEV = "dev"
 PROD = "prod"
@@ -47,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
         vol.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
         vol.Optional(CONF_SAVE_TIMESTAMPTED_FILE, default=False): cv.boolean,
+        vol.Optional(CONF_ALWAYS_SAVE_LATEST_JPG, default=False): cv.boolean,
     }
 )
 
@@ -75,6 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             camera.get(CONF_NAME),
             save_file_folder,
             config[CONF_SAVE_TIMESTAMPTED_FILE],
+            config[CONF_ALWAYS_SAVE_LATEST_JPG],
         )
         entities.append(sighthound_person)
 
@@ -84,6 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             camera.get(CONF_NAME),
             save_file_folder,
             config[CONF_SAVE_TIMESTAMPTED_FILE],
+            config[CONF_ALWAYS_SAVE_LATEST_JPG],
         )
         entities.append(sighthound_vehicle)
     add_entities(entities)
@@ -93,7 +97,7 @@ class SighthoundPersonEntity(ImageProcessingEntity):
     """Create a sighthound person entity."""
 
     def __init__(
-        self, api, camera_entity, name, save_file_folder, save_timestamped_file
+        self, api, camera_entity, name, save_file_folder, save_timestamped_file, always_save_latest_jpg
     ):
         """Init."""
         self._api = api
@@ -109,6 +113,7 @@ class SighthoundPersonEntity(ImageProcessingEntity):
         self._image_height = None
         self._save_file_folder = save_file_folder
         self._save_timestamped_file = save_timestamped_file
+        self._always_save_latest_jpg = always_save_latest_jpg
 
     def process_image(self, image):
         """Process an image."""
@@ -123,8 +128,9 @@ class SighthoundPersonEntity(ImageProcessingEntity):
         self._image_height = metadata["image_height"]
         for person in people:
             self.fire_person_detected_event(person)
-        if self._save_file_folder and self._state > 0:
-            self.save_image(image, people, self._save_file_folder)
+        if self._save_file_folder:
+            if self._state > 0 or self._always_save_latest_jpg:
+                self.save_image(image, people, self._save_file_folder)
 
     def fire_person_detected_event(self, person):
         """Send event with detected total_persons."""
@@ -198,7 +204,7 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
     """Create a sighthound person entity."""
 
     def __init__(
-        self, api, camera_entity, name, save_file_folder, save_timestamped_file
+        self, api, camera_entity, name, save_file_folder, save_timestamped_file, always_save_latest_jpg
     ):
         """Init."""
         self._api = api
@@ -214,6 +220,7 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
         self._image_height = None
         self._save_file_folder = save_file_folder
         self._save_timestamped_file = save_timestamped_file
+        self._always_save_latest_jpg = always_save_latest_jpg
 
     def process_image(self, image):
         """Process an image."""
@@ -228,8 +235,9 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
         self._image_height = metadata["image_height"]
         for vehicle in vehicles:
             self.fire_vehicle_detected_event(vehicle)
-        if self._save_file_folder and self._state > 0:
-            self.save_image(image, vehicles, self._save_file_folder)
+        if self._save_file_folder:
+            if self._state > 0 or self._always_save_latest_jpg:
+                self.save_image(image, vehicles, self._save_file_folder)
 
     def fire_vehicle_detected_event(self, vehicle):
         """Send event."""
