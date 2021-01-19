@@ -243,6 +243,9 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
                 ATTR_MODEL: vehicle["model"],
                 ATTR_COLOR: vehicle["color"],
                 ATTR_REGION: vehicle["region"],
+                ATTR_BOUNDING_BOX: hound.bboxvert_to_tf_style(
+                    vehicle["boundingBox"], self._image_width, self._image_height
+                ),
             },
         )
 
