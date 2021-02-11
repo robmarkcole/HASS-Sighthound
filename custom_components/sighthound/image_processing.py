@@ -195,9 +195,9 @@ class SighthoundPersonEntity(ImageProcessingEntity):
     @property
     def device_state_attributes(self):
         """Return the attributes."""
-        if not self._last_detection:
-            return {}
-        return {"last_person": self._last_detection}
+        attr = {}
+        attr.update({"last_person": self._last_detection})
+        return attr
 
 
 class SighthoundVehicleEntity(ImageProcessingEntity):
@@ -221,9 +221,11 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
         self._save_file_folder = save_file_folder
         self._save_timestamped_file = save_timestamped_file
         self._always_save_latest_jpg = always_save_latest_jpg
+        self._plates = []
 
     def process_image(self, image):
         """Process an image."""
+        self._plates = []
         detections = self._api.recognize(image, "vehicle,licenseplate")
         vehicles = hound.get_vehicles(detections)
         self._state = len(vehicles)
@@ -235,6 +237,7 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
         self._image_height = metadata["image_height"]
         for vehicle in vehicles:
             self.fire_vehicle_detected_event(vehicle)
+            self._plates.append(vehicle["licenseplate"])
         if self._save_file_folder:
             if self._state > 0 or self._always_save_latest_jpg:
                 self.save_image(image, vehicles, self._save_file_folder)
@@ -308,6 +311,7 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
     @property
     def device_state_attributes(self):
         """Return the attributes."""
-        if not self._last_detection:
-            return {}
-        return {"last_vehicle": self._last_detection}
+        attr = {}
+        attr.update({"last_vehicle": self._last_detection})
+        attr.update({"plates": self._plates})
+        return attr

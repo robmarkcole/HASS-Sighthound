@@ -1,6 +1,6 @@
 {
         "domain": "sighthound",
-        "name": "Sighthound custom component",
+        "name": "Sighthound custom integration",
         "documentation": "https://github.com/robmarkcole/HASS-Sighthound",
         "version": "0.11.0",
         "requirements": ["pillow==7.2.0", "simplehound==0.6"],
