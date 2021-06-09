@@ -34,6 +34,7 @@ ATTR_MODEL = "model"
 ATTR_COLOR = "color"
 ATTR_REGION = "region"
 ATTR_VEHICLE_TYPE = "vehicle_type"
+ATTR_LAST_DETECTION = "image_url"
 CONF_ACCOUNT_TYPE = "account_type"
 CONF_SAVE_FILE_FOLDER = "save_file_folder"
 CONF_SAVE_TIMESTAMPTED_FILE = "save_timestamped_file"
@@ -222,10 +223,16 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
         self._save_timestamped_file = save_timestamped_file
         self._always_save_latest_jpg = always_save_latest_jpg
         self._plates = []
+        self._color = []
+        self._make = []
+        self._model = []
 
     def process_image(self, image):
         """Process an image."""
         self._plates = []
+        self._color = []
+        self._make = []
+        self._model = []
         detections = self._api.recognize(image, "vehicle,licenseplate")
         vehicles = hound.get_vehicles(detections)
         self._state = len(vehicles)
@@ -238,6 +245,9 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
         for vehicle in vehicles:
             self.fire_vehicle_detected_event(vehicle)
             self._plates.append(vehicle["licenseplate"])
+            self._color.append(vehicle["color"])
+            self._make.append(vehicle["make"])
+            self._model.append(vehicle["model"])
         if self._save_file_folder:
             if self._state > 0 or self._always_save_latest_jpg:
                 self.save_image(image, vehicles, self._save_file_folder)
@@ -314,4 +324,7 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
         attr = {}
         attr.update({"last_vehicle": self._last_detection})
         attr.update({"plates": self._plates})
+        attr.update({"color": self._color})
+        attr.update({"make": self._make})
+        attr.update({"model": self._model})
         return attr
