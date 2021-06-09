@@ -34,6 +34,7 @@ ATTR_MODEL = "model"
 ATTR_COLOR = "color"
 ATTR_REGION = "region"
 ATTR_VEHICLE_TYPE = "vehicle_type"
+ATTR_LAST_DETECTION = "image_url"
 CONF_ACCOUNT_TYPE = "account_type"
 CONF_SAVE_FILE_FOLDER = "save_file_folder"
 CONF_SAVE_TIMESTAMPTED_FILE = "save_timestamped_file"
@@ -114,11 +115,16 @@ class SighthoundPersonEntity(ImageProcessingEntity):
         self._save_file_folder = save_file_folder
         self._save_timestamped_file = save_timestamped_file
         self._always_save_latest_jpg = always_save_latest_jpg
+        self._age = []
+        self._gender = []
 
     def process_image(self, image):
         """Process an image."""
+        self._age = []
+        self._gender = []
         detections = self._api.detect(image)
         people = hound.get_people(detections)
+        faces = hound.get_faces(detections)
         self._state = len(people)
         if self._state > 0:
             self._last_detection = dt_util.now().strftime(DATETIME_FORMAT)
@@ -131,6 +137,9 @@ class SighthoundPersonEntity(ImageProcessingEntity):
         if self._save_file_folder:
             if self._state > 0 or self._always_save_latest_jpg:
                 self.save_image(image, people, self._save_file_folder)
+        for face in faces:
+            self._age.append(face["age"])
+            self._gender.append(face["gender"])
 
     def fire_person_detected_event(self, person):
         """Send event with detected total_persons."""
@@ -197,11 +206,13 @@ class SighthoundPersonEntity(ImageProcessingEntity):
         """Return the attributes."""
         attr = {}
         attr.update({"last_person": self._last_detection})
+        attr.update({"gender": self._gender})
+        attr.update({"age": self._age})
         return attr
 
 
 class SighthoundVehicleEntity(ImageProcessingEntity):
-    """Create a sighthound person entity."""
+    """Create a sighthound vehicle entity."""
 
     def __init__(
         self, api, camera_entity, name, save_file_folder, save_timestamped_file, always_save_latest_jpg
@@ -263,6 +274,7 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
                 ATTR_MODEL: vehicle["model"],
                 ATTR_COLOR: vehicle["color"],
                 ATTR_REGION: vehicle["region"],
+                ATTR_LAST_DETECTION: self._last_detection,
                 ATTR_BOUNDING_BOX: hound.bboxvert_to_tf_style(
                     vehicle["boundingBox"], self._image_width, self._image_height
                 ),
