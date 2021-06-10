@@ -34,7 +34,6 @@ ATTR_MODEL = "model"
 ATTR_COLOR = "color"
 ATTR_REGION = "region"
 ATTR_VEHICLE_TYPE = "vehicle_type"
-ATTR_LAST_DETECTION = "image_url"
 CONF_ACCOUNT_TYPE = "account_type"
 CONF_SAVE_FILE_FOLDER = "save_file_folder"
 CONF_SAVE_TIMESTAMPTED_FILE = "save_timestamped_file"
@@ -277,7 +276,6 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
                 ATTR_MODEL: vehicle["model"],
                 ATTR_COLOR: vehicle["color"],
                 ATTR_REGION: vehicle["region"],
-                ATTR_LAST_DETECTION: self._last_detection,
                 ATTR_BOUNDING_BOX: hound.bboxvert_to_tf_style(
                     vehicle["boundingBox"], self._image_width, self._image_height
                 ),
