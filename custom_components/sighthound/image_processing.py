@@ -331,7 +331,7 @@ class SighthoundVehicleEntity(ImageProcessingEntity):
         return ATTR_VEHICLE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes."""
         attr = {}
         attr.update({"last_vehicle": self._last_detection})
